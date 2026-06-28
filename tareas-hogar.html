@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Casa en Orden · Tareas del Hogar</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --cream:    #F7F4EF;
+    --cream-d:  #EDE8E0;
+    --sage:     #5B8A6A;
+    --sage-l:   #D0E4D8;
+    --terra:    #C26B4A;
+    --terra-l:  #F3DDD4;
+    --ink:      #2D2D2D;
+    --ink-m:    #6B6560;
+    --line:     #DDD8D0;
+    --white:    #FFFFFF;
+    --shadow:   0 2px 12px rgba(45,45,45,.08);
+    --r:        12px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--white);
+    border-bottom: 1px solid var(--line);
+    padding: 18px 20px 0;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 1px 8px rgba(0,0,0,.05);
+  }
+  .header-top {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 16px;
+  }
+  .house-icon {
+    width: 40px; height: 40px;
+    background: var(--sage);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+    transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+  }
+  .house-icon:hover { transform: scale(1.15) rotate(-4deg); }
+  .header-title h1 { font-size: 18px; font-weight: 700; letter-spacing: -.3px; }
+  .header-title p  { font-size: 12px; color: var(--ink-m); margin-top: 1px; }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex; gap: 0;
+    border-bottom: 2px solid var(--line);
+    margin: 0 -20px;
+  }
+  .tab-btn {
+    flex: 1; padding: 11px 4px 13px;
+    background: none; border: none; cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px; font-weight: 500;
+    color: var(--ink-m);
+    position: relative;
+    transition: color .2s;
+  }
+  .tab-btn.active {
+    color: var(--sage);
+    font-weight: 700;
+  }
+  .tab-btn.active::after {
+    content: '';
+    position: absolute; bottom: -2px; left: 16px; right: 16px;
+    height: 2px; background: var(--sage);
+    border-radius: 2px 2px 0 0;
+  }
+
+  /* ── MAIN ── */
+  main { max-width: 600px; margin: 0 auto; padding: 24px 16px 0; }
+
+  /* ── VIEW PANELS ── */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ── DATE NAV ── */
+  .date-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .date-nav h2 { font-size: 16px; font-weight: 600; letter-spacing: -.2px; }
+  .date-nav .sub { font-size: 12px; color: var(--ink-m); font-weight: 400; }
+  .nav-arrows { display: flex; gap: 6px; }
+  .nav-btn {
+    width: 32px; height: 32px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--white);
+    cursor: pointer; font-size: 15px;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s, border-color .15s;
+  }
+  .nav-btn:hover { background: var(--sage-l); border-color: var(--sage); }
+
+  /* ── DAY COLUMNS ── */
+  .day-strip {
+    display: flex; gap: 8px;
+    overflow-x: auto; padding-bottom: 4px;
+    margin-bottom: 20px;
+    scrollbar-width: none;
+  }
+  .day-strip::-webkit-scrollbar { display: none; }
+  .day-chip {
+    flex-shrink: 0;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1.5px solid var(--line);
+    background: var(--white);
+    cursor: pointer;
+    transition: all .15s;
+    min-width: 54px;
+  }
+  .day-chip:hover { border-color: var(--sage); }
+  .day-chip.selected {
+    background: var(--sage); border-color: var(--sage);
+    color: white;
+  }
+  .day-chip .wday { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .6px; opacity: .7; }
+  .day-chip .wday-selected { opacity: 1; }
+  .day-chip .dnum { font-size: 18px; font-weight: 700; margin-top: 2px; }
+  .day-chip .badge {
+    font-size: 9px; font-weight: 700;
+    background: var(--terra); color: white;
+    border-radius: 10px; padding: 1px 5px;
+    margin-top: 3px;
+    min-width: 16px; text-align: center;
+  }
+  .day-chip.selected .badge { background: rgba(255,255,255,.35); }
+
+  /* ── TASK LIST ── */
+  .task-section { margin-bottom: 28px; }
+  .section-label {
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .8px;
+    color: var(--ink-m);
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-label::after {
+    content: ''; flex: 1; height: 1px; background: var(--line);
+  }
+
+  .task-card {
+    background: var(--white);
+    border-radius: var(--r);
+    border: 1.5px solid var(--line);
+    padding: 13px 14px;
+    margin-bottom: 8px;
+    display: flex; align-items: flex-start; gap: 12px;
+    cursor: default;
+    transition: box-shadow .15s, border-color .15s;
+    position: relative;
+  }
+  .task-card:hover { box-shadow: var(--shadow); border-color: #C8C3BA; }
+  .task-card.done { opacity: .55; }
+  .task-card.done .task-name { text-decoration: line-through; }
+
+  .task-check {
+    width: 22px; height: 22px; border-radius: 7px;
+    border: 2px solid var(--line);
+    flex-shrink: 0; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    transition: all .18s;
+    margin-top: 1px;
+  }
+  .task-check:hover { border-color: var(--sage); background: var(--sage-l); }
+  .task-card.done .task-check {
+    background: var(--sage); border-color: var(--sage); color: white;
+  }
+
+  .task-body { flex: 1; min-width: 0; }
+  .task-name { font-size: 14px; font-weight: 500; line-height: 1.4; }
+  .task-meta { font-size: 11px; color: var(--ink-m); margin-top: 3px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .task-cat {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 10px; font-weight: 600; padding: 2px 7px;
+    border-radius: 20px;
+  }
+
+  .task-del {
+    width: 26px; height: 26px; border-radius: 6px;
+    border: none; background: none;
+    color: var(--ink-m); cursor: pointer; font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity .15s, background .15s;
+  }
+  .task-card:hover .task-del { opacity: 1; }
+  .task-del:hover { background: var(--terra-l); color: var(--terra); }
+
+  /* ── PRIORITY DOT ── */
+  .prio {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 7px;
+  }
+  .prio-alta  { background: #E05252; }
+  .prio-media { background: #E09B3D; }
+  .prio-baja  { background: var(--sage); }
+
+  /* ── ADD FORM ── */
+  .add-bar {
+    background: var(--white);
+    border: 1.5px solid var(--line);
+    border-radius: var(--r);
+    padding: 14px;
+    margin-bottom: 28px;
+    box-shadow: var(--shadow);
+  }
+  .add-bar h3 { font-size: 13px; font-weight: 600; margin-bottom: 12px; color: var(--ink-m); }
+  .form-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .inp {
+    flex: 1; min-width: 140px;
+    padding: 9px 12px; border: 1.5px solid var(--line);
+    border-radius: 9px; font-size: 13px; font-family: 'Inter', sans-serif;
+    background: var(--cream); color: var(--ink);
+    outline: none; transition: border-color .15s;
+  }
+  .inp:focus { border-color: var(--sage); background: white; }
+  .inp-small { flex: 0 0 120px; }
+  select.inp { cursor: pointer; }
+  .btn-add {
+    padding: 9px 18px;
+    background: var(--sage); color: white;
+    border: none; border-radius: 9px;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: background .15s, transform .1s;
+    white-space: nowrap;
+  }
+  .btn-add:hover { background: #4A7459; }
+  .btn-add:active { transform: scale(.97); }
+
+  /* ── WEEK VIEW ── */
+  .week-row {
+    background: var(--white);
+    border-radius: var(--r);
+    border: 1.5px solid var(--line);
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+  .week-row-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 14px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .week-row-head:hover { background: var(--cream); }
+  .week-row-title { font-size: 14px; font-weight: 600; }
+  .week-row-stats { font-size: 11px; color: var(--ink-m); }
+  .week-progress {
+    height: 4px; background: var(--cream-d); margin: 0 14px 0;
+  }
+  .week-progress-bar { height: 100%; background: var(--sage); border-radius: 2px; transition: width .4s; }
+  .week-tasks { padding: 8px 14px 14px; display: none; }
+  .week-row.open .week-tasks { display: block; }
+  .week-row.open .week-row-head { background: var(--cream); }
+
+  /* ── MONTH VIEW ── */
+  .month-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    gap: 4px; margin-bottom: 20px;
+  }
+  .mg-head {
+    text-align: center; font-size: 10px; font-weight: 700;
+    color: var(--ink-m); text-transform: uppercase; letter-spacing: .5px;
+    padding-bottom: 6px;
+  }
+  .mg-cell {
+    aspect-ratio: 1; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 500;
+    cursor: pointer; position: relative;
+    transition: background .15s;
+    color: var(--ink);
+  }
+  .mg-cell:hover { background: var(--sage-l); }
+  .mg-cell.today { background: var(--sage); color: white; font-weight: 700; }
+  .mg-cell.empty { cursor: default; }
+  .mg-cell.has-tasks::after {
+    content: ''; position: absolute; bottom: 3px;
+    width: 4px; height: 4px; border-radius: 50%;
+    background: var(--terra);
+  }
+  .mg-cell.today.has-tasks::after { background: rgba(255,255,255,.7); }
+  .mg-cell.other-month { color: var(--line); }
+
+  .month-summary {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    margin-bottom: 24px;
+  }
+  .month-stat {
+    background: var(--white); border: 1.5px solid var(--line);
+    border-radius: var(--r); padding: 14px;
+    text-align: center;
+  }
+  .month-stat .num { font-size: 26px; font-weight: 700; line-height: 1; }
+  .month-stat .lbl { font-size: 10px; color: var(--ink-m); margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
+
+  /* ── CATEGORIES ── */
+  .cat-tag { border-radius: 20px; padding: 2px 8px; font-size: 10px; font-weight: 600; }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center; padding: 36px 20px;
+    color: var(--ink-m);
+  }
+  .empty-state .icon { font-size: 36px; margin-bottom: 10px; }
+  .empty-state p { font-size: 13px; }
+
+  /* ── TOGGLE ARROW ── */
+  .arrow { transition: transform .25s; display: inline-block; font-size: 11px; }
+  .open .arrow { transform: rotate(180deg); }
+
+  /* ── REPETICIÓN ── */
+  .repeat-row {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    margin-top: 8px;
+  }
+  .repeat-label { font-size: 12px; color: var(--ink-m); white-space: nowrap; }
+  .days-picker { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 8px; }
+  .day-toggle {
+    width: 34px; height: 34px; border-radius: 8px;
+    border: 1.5px solid var(--line);
+    background: var(--cream); color: var(--ink-m);
+    font-size: 11px; font-weight: 700;
+    cursor: pointer; transition: all .15s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .day-toggle.on { background: var(--sage); border-color: var(--sage); color: white; }
+  .repeat-hint { font-size: 11px; color: var(--sage); font-weight: 500; margin-top: 6px; min-height: 14px; }
+
+  /* ── REPETICIÓN ── */
+  .repeat-row {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    margin-top: 6px;
+  }
+  .repeat-label { font-size: 12px; color: var(--ink-m); white-space: nowrap; }
+  .days-picker {
+    display: flex; gap: 4px; flex-wrap: wrap;
+  }
+  .day-toggle {
+    width: 32px; height: 32px; border-radius: 8px;
+    border: 1.5px solid var(--line);
+    background: var(--cream); color: var(--ink-m);
+    font-size: 11px; font-weight: 700;
+    cursor: pointer; transition: all .15s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .day-toggle.on {
+    background: var(--sage); border-color: var(--sage); color: white;
+  }
+  .repeat-hint {
+    font-size: 11px; color: var(--sage); font-weight: 500;
+    margin-top: 4px; min-height: 14px;
+  }
+
+  /* ── ANILLO DE PROGRESO ── */
+  .ring-wrap {
+    margin-left: auto;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 2px; flex-shrink: 0;
+  }
+  .ring-svg { display: block; transform: rotate(-90deg); }
+  .ring-track { fill: none; stroke: var(--cream-d); stroke-width: 4; }
+  .ring-fill  {
+    fill: none; stroke: var(--sage); stroke-width: 4;
+    stroke-linecap: round;
+    transition: stroke-dashoffset .6s cubic-bezier(.4,0,.2,1),
+                stroke .4s;
+  }
+  .ring-fill.low  { stroke: var(--terra); }
+  .ring-fill.mid  { stroke: #E09B3D; }
+  .ring-fill.high { stroke: var(--sage); }
+  .ring-pct {
+    font-size: 9px; font-weight: 700;
+    color: var(--ink-m); letter-spacing: .3px;
+    text-align: center; line-height: 1;
+  }
+  .ring-label {
+    font-size: 8px; color: var(--ink-m);
+    text-transform: uppercase; letter-spacing: .4px;
+    text-align: center;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media(max-width: 420px) {
+    .month-grid { gap: 2px; }
+    .mg-cell { font-size: 11px; }
+    .form-row { flex-direction: column; }
+    .inp-small { flex: 1; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div class="house-icon">🏡</div>
+    <div class="header-title">
+      <h1>Casa en Orden</h1>
+      <p id="header-date"></p>
+    </div>
+    <div class="ring-wrap" id="progress-ring-wrap" title="Progreso del día seleccionado">
+      <svg class="ring-svg" width="52" height="52" viewBox="0 0 52 52">
+        <circle class="ring-track" cx="26" cy="26" r="21"/>
+        <circle class="ring-fill high" id="ring-fill" cx="26" cy="26" r="21"
+          stroke-dasharray="131.95"
+          stroke-dashoffset="131.95"/>
+        <text id="ring-text" x="26" y="26"
+          text-anchor="middle" dominant-baseline="middle"
+          transform="rotate(90,26,26)"
+          style="font-family:Inter,sans-serif;font-size:10px;font-weight:700;fill:#2D2D2D">
+          0%
+        </text>
+      </svg>
+      <div class="ring-label" id="ring-label">hoy</div>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('dia')">📅 Día</button>
+    <button class="tab-btn" onclick="switchTab('semana')">📆 Semana</button>
+    <button class="tab-btn" onclick="switchTab('mes')">🗓️ Mes</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- ══════════ VIEW: DÍA ══════════ -->
+  <div class="view active" id="view-dia">
+    <div style="height:20px"></div>
+
+    <div class="add-bar">
+      <h3>➕ Nueva tarea</h3>
+      <div class="form-row">
+        <input class="inp" id="dia-name" placeholder="Ej: Pasar el aspirador…" onkeydown="if(event.key==='Enter')addDiaTask()">
+        <select class="inp inp-small" id="dia-cat">
+          <option value="🧹 Limpieza">🧹 Limpieza</option>
+          <option value="🍽️ Cocina">🍽️ Cocina</option>
+          <option value="🌿 Plantas">🌿 Plantas</option>
+          <option value="🐶 Mascotas">🐶 Mascotas</option>
+          <option value="🧺 Ropa">🧺 Ropa</option>
+          <option value="🛒 Compras">🛒 Compras</option>
+          <option value="🔧 Mantenimiento">🔧 Mantenimiento</option>
+          <option value="📦 Organización">📦 Organización</option>
+        </select>
+        <select class="inp inp-small" id="dia-prio">
+          <option value="alta">🔴 Alta</option>
+          <option value="media" selected>🟡 Media</option>
+          <option value="baja">🟢 Baja</option>
+        </select>
+        <button class="btn-add" onclick="addDiaTask()">Añadir</button>
+      </div>
+      <!-- REPETICIÓN -->
+      <div class="repeat-row">
+        <span class="repeat-label">🔁 Repetir:</span>
+        <select class="inp" id="dia-repeat" style="flex:0 0 auto;padding:6px 10px;font-size:12px" onchange="onRepeatChange()">
+          <option value="solo">Solo este día</option>
+          <option value="toda-semana">Todos los días (esta semana)</option>
+          <option value="laborables">Lun – Vie</option>
+          <option value="finde">Sáb – Dom</option>
+          <option value="custom">Días específicos…</option>
+        </select>
+      </div>
+      <div id="custom-days-row" style="display:none;margin-top:8px">
+        <div class="days-picker" id="days-picker">
+          <button class="day-toggle" data-d="1" onclick="toggleDay(this)">L</button>
+          <button class="day-toggle" data-d="2" onclick="toggleDay(this)">M</button>
+          <button class="day-toggle" data-d="3" onclick="toggleDay(this)">X</button>
+          <button class="day-toggle" data-d="4" onclick="toggleDay(this)">J</button>
+          <button class="day-toggle" data-d="5" onclick="toggleDay(this)">V</button>
+          <button class="day-toggle" data-d="6" onclick="toggleDay(this)">S</button>
+          <button class="day-toggle" data-d="0" onclick="toggleDay(this)">D</button>
+        </div>
+      </div>
+      <div class="repeat-hint" id="repeat-hint"></div>
+    </div>
+
+    <div class="date-nav">
+      <div>
+        <h2 id="dia-week-label"></h2>
+        <div class="sub" id="dia-month-label"></div>
+      </div>
+      <div class="nav-arrows">
+        <button class="nav-btn" onclick="shiftWeek(-1)">‹</button>
+        <button class="nav-btn" onclick="shiftWeek(0)" title="Hoy">·</button>
+        <button class="nav-btn" onclick="shiftWeek(1)">›</button>
+      </div>
+    </div>
+
+    <div class="day-strip" id="day-strip"></div>
+    <div id="dia-tasks-container"></div>
+  </div>
+
+  <!-- ══════════ VIEW: SEMANA ══════════ -->
+  <div class="view" id="view-semana">
+    <div style="height:20px"></div>
+
+    <div class="add-bar">
+      <h3>➕ Nueva tarea semanal</h3>
+      <div class="form-row">
+        <input class="inp" id="sem-name" placeholder="Ej: Limpiar baños…" onkeydown="if(event.key==='Enter')addSemTask()">
+        <select class="inp inp-small" id="sem-week">
+          <option value="0">Esta semana</option>
+          <option value="1">Semana 2</option>
+          <option value="2">Semana 3</option>
+          <option value="3">Semana 4</option>
+        </select>
+        <select class="inp inp-small" id="sem-cat">
+          <option value="🧹 Limpieza">🧹 Limpieza</option>
+          <option value="🍽️ Cocina">🍽️ Cocina</option>
+          <option value="🧺 Ropa">🧺 Ropa</option>
+          <option value="🔧 Mantenimiento">🔧 Mantenimiento</option>
+          <option value="📦 Organización">📦 Organización</option>
+        </select>
+        <button class="btn-add" onclick="addSemTask()">Añadir</button>
+      </div>
+    </div>
+
+    <div class="date-nav">
+      <div>
+        <h2 id="sem-month-label"></h2>
+        <div class="sub" id="sem-year-label"></div>
+      </div>
+      <div class="nav-arrows">
+        <button class="nav-btn" onclick="shiftMonth('sem', -1)">‹</button>
+        <button class="nav-btn" onclick="shiftMonth('sem', 0)">·</button>
+        <button class="nav-btn" onclick="shiftMonth('sem', 1)">›</button>
+      </div>
+    </div>
+
+    <div id="sem-weeks-container"></div>
+  </div>
+
+  <!-- ══════════ VIEW: MES ══════════ -->
+  <div class="view" id="view-mes">
+    <div style="height:20px"></div>
+
+    <div class="add-bar">
+      <h3>➕ Nueva tarea mensual</h3>
+      <div class="form-row">
+        <input class="inp" id="mes-name" placeholder="Ej: Revisar filtros aire…" onkeydown="if(event.key==='Enter')addMesTask()">
+        <input class="inp inp-small" id="mes-day" type="number" min="1" max="31" placeholder="Día del mes">
+        <select class="inp inp-small" id="mes-cat">
+          <option value="🧹 Limpieza">🧹 Limpieza</option>
+          <option value="🔧 Mantenimiento">🔧 Mantenimiento</option>
+          <option value="🌿 Plantas">🌿 Plantas</option>
+          <option value="🐶 Mascotas">🐶 Mascotas</option>
+          <option value="🛒 Compras">🛒 Compras</option>
+          <option value="📦 Organización">📦 Organización</option>
+        </select>
+        <button class="btn-add" onclick="addMesTask()">Añadir</button>
+      </div>
+    </div>
+
+    <div class="date-nav">
+      <div>
+        <h2 id="mes-month-label"></h2>
+        <div class="sub" id="mes-year-label"></div>
+      </div>
+      <div class="nav-arrows">
+        <button class="nav-btn" onclick="shiftMonth('mes', -1)">‹</button>
+        <button class="nav-btn" onclick="shiftMonth('mes', 0)">·</button>
+        <button class="nav-btn" onclick="shiftMonth('mes', 1)">›</button>
+      </div>
+    </div>
+
+    <div class="month-summary" id="mes-summary"></div>
+    <div class="month-grid" id="mes-grid"></div>
+    <div id="mes-tasks-container"></div>
+  </div>
+
+</main>
+
+<script>
+/* ─────────────────────────────────────────
+   STATE & STORAGE
+───────────────────────────────────────── */
+const STORE = 'casa-tareas-v1';
+
+function load() {
+  try { return JSON.parse(localStorage.getItem(STORE)) || {}; }
+  catch { return {}; }
+}
+function save(data) { localStorage.setItem(STORE, JSON.stringify(data)); }
+
+let db = load();
+if (!db.dia)    db.dia    = {};   // { 'YYYY-MM-DD': [{id,name,cat,prio,done}] }
+if (!db.semana) db.semana = {};   // { 'YYYY-MM-W0..3': [{id,name,cat,done}] }
+if (!db.mes)    db.mes    = {};   // { 'YYYY-MM': [{id,name,cat,day,done}] }
+
+/* ─────────────────────────────────────────
+   DATE HELPERS
+───────────────────────────────────────── */
+const TODAY    = new Date();
+const MESES    = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DIAS_L   = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+const DIAS_F   = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+
+function ymd(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function ymKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+function weekKeyFor(d) {
+  // week 0..3 of a month based on week-of-month
+  const day1 = new Date(d.getFullYear(), d.getMonth(), 1);
+  const weekOfMonth = Math.floor((d.getDate() + day1.getDay() - 1) / 7);
+  return `${ymKey(d)}-W${weekOfMonth}`;
+}
+
+function getMondayOfWeek(d) {
+  const day = d.getDay(); // 0=Sun
+  const diff = day === 0 ? -6 : 1 - day;
+  const mon = new Date(d);
+  mon.setDate(d.getDate() + diff);
+  return mon;
+}
+
+function addDays(d, n) {
+  const r = new Date(d);
+  r.setDate(d.getDate() + n);
+  return r;
+}
+
+/* ─────────────────────────────────────────
+   NAVIGATION STATE
+───────────────────────────────────────── */
+let weekOffset   = 0;   // weeks from today
+let selectedDay  = ymd(TODAY);
+let semMonthOff  = 0;   // month offset for semana view
+let mesMonthOff  = 0;   // month offset for mes view
+
+/* ─────────────────────────────────────────
+   HEADER DATE
+───────────────────────────────────────── */
+function updateHeaderDate() {
+  const el = document.getElementById('header-date');
+  el.textContent = `${DIAS_F[TODAY.getDay()]}, ${TODAY.getDate()} de ${MESES[TODAY.getMonth()]} ${TODAY.getFullYear()}`;
+}
+
+/* ─────────────────────────────────────────
+   TAB SWITCHING
+───────────────────────────────────────── */
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => {
+    b.classList.toggle('active', ['dia','semana','mes'][i] === tab);
+  });
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + tab).classList.add('active');
+  if (tab === 'dia')    renderDia();
+  if (tab === 'semana') renderSemana();
+  if (tab === 'mes')    renderMes();
+  updateRing();
+}
+
+/* ═══════════════════════════════════════
+   VIEW: DÍA
+═══════════════════════════════════════ */
+function shiftWeek(dir) {
+  if (dir === 0) { weekOffset = 0; selectedDay = ymd(TODAY); }
+  else weekOffset += dir;
+  renderDia();
+}
+
+function renderDia() {
+  const anchor = addDays(TODAY, weekOffset * 7);
+  const mon    = getMondayOfWeek(anchor);
+
+  // Labels
+  const sun = addDays(mon, 6);
+  document.getElementById('dia-week-label').textContent =
+    `${mon.getDate()} – ${sun.getDate()} ${MESES[sun.getMonth()]}`;
+  document.getElementById('dia-month-label').textContent =
+    `${MESES[mon.getMonth()]} ${mon.getFullYear()}`;
+
+  // Day strip
+  const strip = document.getElementById('day-strip');
+  strip.innerHTML = '';
+  for (let i = 0; i < 7; i++) {
+    const d   = addDays(mon, i);
+    const key = ymd(d);
+    const tasks = db.dia[key] || [];
+    const pending = tasks.filter(t => !t.done).length;
+
+    const chip = document.createElement('div');
+    chip.className = 'day-chip' + (key === selectedDay ? ' selected' : '');
+    chip.innerHTML = `
+      <span class="wday">${DIAS_L[d.getDay()]}</span>
+      <span class="dnum">${d.getDate()}</span>
+      ${pending ? `<span class="badge">${pending}</span>` : ''}
+    `;
+    chip.onclick = () => { selectedDay = key; renderDia(); };
+    strip.appendChild(chip);
+  }
+
+  renderDiaTasks();
+}
+
+function renderDiaTasks() {
+  const container = document.getElementById('dia-tasks-container');
+  const tasks = db.dia[selectedDay] || [];
+
+  // Group by category
+  const cats = {};
+  tasks.forEach(t => {
+    if (!cats[t.cat]) cats[t.cat] = [];
+    cats[t.cat].push(t);
+  });
+
+  const pending   = tasks.filter(t => !t.done);
+  const completed = tasks.filter(t =>  t.done);
+
+  let html = '';
+
+  if (!tasks.length) {
+    html = `<div class="empty-state"><div class="icon">✨</div><p>Sin tareas para este día.<br>¡Añade una arriba!</p></div>`;
+  } else {
+    // Pending
+    if (pending.length) {
+      html += `<div class="task-section"><div class="section-label">Pendiente · ${pending.length}</div>`;
+      pending.forEach(t => { html += taskCardHTML(t, 'dia'); });
+      html += `</div>`;
+    }
+    // Done
+    if (completed.length) {
+      html += `<div class="task-section"><div class="section-label">Completado · ${completed.length}</div>`;
+      completed.forEach(t => { html += taskCardHTML(t, 'dia'); });
+      html += `</div>`;
+    }
+  }
+
+  container.innerHTML = html;
+  updateRing();
+}
+
+function addDiaTask() {
+  const name = document.getElementById('dia-name').value.trim();
+  if (!name) { document.getElementById('dia-name').focus(); return; }
+  const cat    = document.getElementById('dia-cat').value;
+  const prio   = document.getElementById('dia-prio').value;
+  const repeat = document.getElementById('dia-repeat').value;
+
+  // Calcular qué días de la semana visible añadir
+  const anchor = addDays(TODAY, weekOffset * 7);
+  const mon    = getMondayOfWeek(anchor);
+  const targetDays = getTargetDays(repeat, mon); // array de Date
+
+  targetDays.forEach(d => {
+    const k = ymd(d);
+    if (!db.dia[k]) db.dia[k] = [];
+    db.dia[k].push({ id: uid(), name, cat, prio, done: false });
+  });
+
+  save(db);
+  document.getElementById('dia-name').value = '';
+  document.getElementById('dia-repeat').value = 'solo';
+  document.getElementById('custom-days-row').style.display = 'none';
+  document.getElementById('repeat-hint').textContent = '';
+  renderDia();
+}
+
+/* Devuelve array de Date según la opción de repetición */
+function getTargetDays(repeat, mon) {
+  if (repeat === 'solo') {
+    return [new Date(selectedDay.replace(/-/g, '/'))];
+  }
+  if (repeat === 'toda-semana') {
+    return Array.from({length: 7}, (_, i) => addDays(mon, i));
+  }
+  if (repeat === 'laborables') {
+    return Array.from({length: 5}, (_, i) => addDays(mon, i)); // Lun-Vie
+  }
+  if (repeat === 'finde') {
+    return [addDays(mon, 5), addDays(mon, 6)]; // Sab, Dom
+  }
+  if (repeat === 'custom') {
+    const selected = [...document.querySelectorAll('.day-toggle.on')].map(b => parseInt(b.dataset.d));
+    // 0=Dom,1=Lun...6=Sab → mapear a offset desde lunes (mon=1)
+    return Array.from({length: 7}, (_, i) => addDays(mon, i))
+      .filter(d => selected.includes(d.getDay()));
+  }
+  return [new Date(selectedDay.replace(/-/g, '/'))];
+}
+
+function onRepeatChange() {
+  const val  = document.getElementById('dia-repeat').value;
+  const crow = document.getElementById('custom-days-row');
+  const hint = document.getElementById('repeat-hint');
+  crow.style.display = val === 'custom' ? 'block' : 'none';
+  const anchor = addDays(TODAY, weekOffset * 7);
+  const mon    = getMondayOfWeek(anchor);
+  const msgs = {
+    'solo':        '',
+    'toda-semana': `Se añadirá a los 7 días de esta semana`,
+    'laborables':  `Se añadirá de Lunes a Viernes`,
+    'finde':       `Se añadirá a Sábado y Domingo`,
+    'custom':      `Selecciona los días abajo`,
+  };
+  hint.textContent = msgs[val] || '';
+}
+
+function toggleDay(btn) {
+  btn.classList.toggle('on');
+  const sel = [...document.querySelectorAll('.day-toggle.on')].map(b => {
+    return ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][parseInt(b.dataset.d)];
+  });
+  document.getElementById('repeat-hint').textContent =
+    sel.length ? `Se añadirá: ${sel.join(', ')}` : 'Selecciona al menos un día';
+}
+
+/* ═══════════════════════════════════════
+   VIEW: SEMANA
+═══════════════════════════════════════ */
+function renderSemana() {
+  const ref = new Date(TODAY.getFullYear(), TODAY.getMonth() + semMonthOff, 1);
+  document.getElementById('sem-month-label').textContent = MESES[ref.getMonth()];
+  document.getElementById('sem-year-label').textContent  = ref.getFullYear();
+
+  const ymk   = ymKey(ref);
+  const weekLabels = ['1ª Semana', '2ª Semana', '3ª Semana', '4ª Semana'];
+  const container  = document.getElementById('sem-weeks-container');
+  let html = '';
+
+  for (let w = 0; w < 4; w++) {
+    const key   = `${ymk}-W${w}`;
+    const tasks = db.semana[key] || [];
+    const done  = tasks.filter(t => t.done).length;
+    const pct   = tasks.length ? Math.round((done / tasks.length) * 100) : 0;
+    const pending = tasks.length - done;
+
+    html += `
+    <div class="week-row" id="wr-${w}" onclick="toggleWeekRow(${w})">
+      <div class="week-row-head">
+        <div>
+          <div class="week-row-title">${weekLabels[w]}</div>
+          <div class="week-row-stats">${tasks.length} tarea${tasks.length!==1?'s':''} · ${done} completada${done!==1?'s':''}</div>
+        </div>
+        <span class="arrow">▼</span>
+      </div>
+      <div class="week-progress"><div class="week-progress-bar" style="width:${pct}%"></div></div>
+      <div class="week-tasks" onclick="event.stopPropagation()">
+        ${tasks.length === 0 ? `<div class="empty-state" style="padding:16px 0"><p>Sin tareas esta semana</p></div>` : ''}
+        ${tasks.map(t => taskCardHTML(t, 'semana', key)).join('')}
+      </div>
+    </div>`;
+  }
+
+  container.innerHTML = html;
+  updateRing();
+
+  // Re-open if current week
+  const curKey = weekKeyFor(TODAY);
+  const curW   = parseInt(curKey.split('-W')[1]);
+  if (semMonthOff === 0 && curW < 4) {
+    document.getElementById(`wr-${curW}`)?.classList.add('open');
+  }
+}
+
+function toggleWeekRow(w) {
+  document.getElementById(`wr-${w}`)?.classList.toggle('open');
+}
+
+function addSemTask() {
+  const name = document.getElementById('sem-name').value.trim();
+  if (!name) { document.getElementById('sem-name').focus(); return; }
+  const w   = document.getElementById('sem-week').value;
+  const cat = document.getElementById('sem-cat').value;
+  const ref = new Date(TODAY.getFullYear(), TODAY.getMonth() + semMonthOff, 1);
+  const key = `${ymKey(ref)}-W${w}`;
+  if (!db.semana[key]) db.semana[key] = [];
+  db.semana[key].push({ id: uid(), name, cat, done: false });
+  save(db);
+  document.getElementById('sem-name').value = '';
+  renderSemana();
+}
+
+/* ═══════════════════════════════════════
+   VIEW: MES
+═══════════════════════════════════════ */
+function renderMes() {
+  const ref  = new Date(TODAY.getFullYear(), TODAY.getMonth() + mesMonthOff, 1);
+  const ymk  = ymKey(ref);
+  const tasks = db.mes[ymk] || [];
+
+  document.getElementById('mes-month-label').textContent = MESES[ref.getMonth()];
+  document.getElementById('mes-year-label').textContent  = ref.getFullYear();
+
+  // Summary
+  const done     = tasks.filter(t => t.done).length;
+  const pending  = tasks.length - done;
+  document.getElementById('mes-summary').innerHTML = `
+    <div class="month-stat">
+      <div class="num" style="color:var(--sage)">${tasks.length}</div>
+      <div class="lbl">Total</div>
+    </div>
+    <div class="month-stat">
+      <div class="num" style="color:var(--terra)">${pending}</div>
+      <div class="lbl">Pendientes</div>
+    </div>
+    <div class="month-stat">
+      <div class="num" style="color:#5B8A6A">${done}</div>
+      <div class="lbl">Hechas</div>
+    </div>
+  `;
+
+  // Calendar grid
+  const daysInMonth = new Date(ref.getFullYear(), ref.getMonth() + 1, 0).getDate();
+  const firstDOW    = ref.getDay(); // 0=Sun
+  const taskDays    = new Set(tasks.map(t => t.day));
+  let gridHTML = DIAS_L.map(d => `<div class="mg-head">${d}</div>`).join('');
+
+  // Blank cells before day 1
+  for (let i = 0; i < firstDOW; i++) {
+    gridHTML += `<div class="mg-cell empty"></div>`;
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    const isToday = mesMonthOff === 0 && d === TODAY.getDate();
+    const hasTasks = taskDays.has(d);
+    gridHTML += `<div class="mg-cell ${isToday?'today':''} ${hasTasks?'has-tasks':''}"
+      onclick="scrollToDay(${d})">${d}</div>`;
+  }
+  document.getElementById('mes-grid').innerHTML = gridHTML;
+
+  // Task list
+  renderMesTasks(tasks, ymk);
+}
+
+function renderMesTasks(tasks, ymk) {
+  const container = document.getElementById('mes-tasks-container');
+  if (!tasks.length) {
+    container.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>Sin tareas este mes.<br>¡Organiza tu hogar!</p></div>`;
+    return;
+  }
+
+  // Group by day
+  const byDay = {};
+  tasks.forEach(t => {
+    const k = t.day || 'Sin fecha';
+    if (!byDay[k]) byDay[k] = [];
+    byDay[k].push(t);
+  });
+
+  const keys = Object.keys(byDay).sort((a,b) => {
+    if (a === 'Sin fecha') return 1;
+    if (b === 'Sin fecha') return -1;
+    return a - b;
+  });
+
+  let html = '';
+  keys.forEach(k => {
+    const label = k === 'Sin fecha' ? 'Sin fecha asignada' : `Día ${k}`;
+    html += `<div class="task-section" id="day-section-${k}">
+      <div class="section-label">${label}</div>`;
+    byDay[k].forEach(t => { html += taskCardHTML(t, 'mes', ymk); });
+    html += `</div>`;
+  });
+
+  container.innerHTML = html;
+  updateRing();
+}
+
+function addMesTask() {
+  const name = document.getElementById('mes-name').value.trim();
+  if (!name) { document.getElementById('mes-name').focus(); return; }
+  const dayVal = parseInt(document.getElementById('mes-day').value) || null;
+  const cat    = document.getElementById('mes-cat').value;
+  const ref    = new Date(TODAY.getFullYear(), TODAY.getMonth() + mesMonthOff, 1);
+  const ymk    = ymKey(ref);
+  if (!db.mes[ymk]) db.mes[ymk] = [];
+  db.mes[ymk].push({ id: uid(), name, cat, day: dayVal, done: false });
+  save(db);
+  document.getElementById('mes-name').value = '';
+  document.getElementById('mes-day').value = '';
+  renderMes();
+}
+
+function scrollToDay(d) {
+  const el = document.getElementById(`day-section-${d}`);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ═══════════════════════════════════════
+   SHARED: MONTH NAVIGATION
+═══════════════════════════════════════ */
+function shiftMonth(view, dir) {
+  if (view === 'sem') {
+    if (dir === 0) semMonthOff = 0; else semMonthOff += dir;
+    renderSemana();
+  } else {
+    if (dir === 0) mesMonthOff = 0; else mesMonthOff += dir;
+    renderMes();
+  }
+}
+
+/* ═══════════════════════════════════════
+   SHARED: TASK CARD HTML
+═══════════════════════════════════════ */
+function catColor(cat) {
+  const map = {
+    '🧹 Limpieza':      { bg:'#E8F4EC', color:'#3D7A51' },
+    '🍽️ Cocina':        { bg:'#FDF3E3', color:'#B5762A' },
+    '🌿 Plantas':       { bg:'#E6F2E8', color:'#4A7A52' },
+    '🐶 Mascotas':      { bg:'#FDEAE8', color:'#B54A40' },
+    '🧺 Ropa':          { bg:'#EBE8F5', color:'#6A5BA8' },
+    '🛒 Compras':       { bg:'#FFF0E4', color:'#C26B4A' },
+    '🔧 Mantenimiento': { bg:'#E4EDF5', color:'#3A6D9C' },
+    '📦 Organización':  { bg:'#F5F0E4', color:'#8A7040' },
+  };
+  return map[cat] || { bg:'#EEE', color:'#666' };
+}
+
+function taskCardHTML(t, view, key) {
+  const cc     = catColor(t.cat);
+  const prioC  = t.prio === 'alta' ? 'prio-alta' : t.prio === 'media' ? 'prio-media' : 'prio-baja';
+  const onChk  = `toggleTask('${view}','${key||''}','${t.id}')`;
+  const onDel  = `deleteTask('${view}','${key||''}','${t.id}')`;
+  return `
+  <div class="task-card ${t.done?'done':''}" id="tc-${t.id}">
+    ${view==='dia'?`<div class="prio ${prioC}"></div>`:''}
+    <div class="task-check" onclick="${onChk}">${t.done?'✓':''}</div>
+    <div class="task-body">
+      <div class="task-name">${esc(t.name)}</div>
+      <div class="task-meta">
+        <span class="cat-tag" style="background:${cc.bg};color:${cc.color}">${t.cat}</span>
+        ${view==='dia'&&t.prio ? `<span style="font-size:10px;color:var(--ink-m);text-transform:capitalize">${t.prio} prioridad</span>`:''}
+        ${view==='mes'&&t.day  ? `<span style="font-size:10px;color:var(--ink-m)">Día ${t.day}</span>`:''}
+      </div>
+    </div>
+    <button class="task-del" onclick="${onDel}" title="Eliminar">✕</button>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════
+   SHARED: TOGGLE / DELETE
+═══════════════════════════════════════ */
+function toggleTask(view, key, id) {
+  const tasks = getTasks(view, key);
+  const t = tasks.find(x => x.id === id);
+  if (t) { t.done = !t.done; save(db); rerender(view, key); }
+}
+
+function deleteTask(view, key, id) {
+  if (!confirm('¿Eliminar esta tarea?')) return;
+  const tasks = getTasks(view, key);
+  const idx   = tasks.findIndex(x => x.id === id);
+  if (idx > -1) { tasks.splice(idx, 1); save(db); rerender(view, key); }
+}
+
+function getTasks(view, key) {
+  if (view === 'dia')    return db.dia[key]    || (db.dia[key]    = []);
+  if (view === 'semana') return db.semana[key] || (db.semana[key] = []);
+  if (view === 'mes')    return db.mes[key]    || (db.mes[key]    = []);
+}
+
+function rerender(view, key) {
+  if (view === 'dia')    renderDia();
+  if (view === 'semana') renderSemana();
+  if (view === 'mes')    renderMes();
+}
+
+/* ─────────────────────────────────────────
+   UTILS
+───────────────────────────────────────── */
+function uid() { return Math.random().toString(36).slice(2,10); }
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+/* ─────────────────────────────────────────
+   SEED DEMO DATA (solo si está vacío)
+───────────────────────────────────────── */
+function seedDemo() {
+  const todayKey = ymd(TODAY);
+  if (db.dia[todayKey]?.length) return; // ya tiene datos
+
+  const tomorrow = ymd(addDays(TODAY, 1));
+
+  db.dia[todayKey] = [
+    { id: uid(), name: 'Pasar el aspirador en el salón', cat: '🧹 Limpieza', prio: 'alta', done: false },
+    { id: uid(), name: 'Preparar la cena', cat: '🍽️ Cocina', prio: 'media', done: false },
+    { id: uid(), name: 'Regar las plantas', cat: '🌿 Plantas', prio: 'baja', done: true },
+  ];
+  db.dia[tomorrow] = [
+    { id: uid(), name: 'Poner lavadora', cat: '🧺 Ropa', prio: 'media', done: false },
+  ];
+
+  const ref = ymKey(TODAY);
+  const curW = parseInt(weekKeyFor(TODAY).split('-W')[1]);
+  const wk = `${ref}-W${curW}`;
+  if (!db.semana[wk]) db.semana[wk] = [];
+  db.semana[wk].push(
+    { id: uid(), name: 'Limpiar los baños', cat: '🧹 Limpieza', done: false },
+    { id: uid(), name: 'Ordenar armarios', cat: '📦 Organización', done: false },
+    { id: uid(), name: 'Cambiar sábanas', cat: '🧺 Ropa', done: true },
+  );
+
+  const ymk = ymKey(TODAY);
+  if (!db.mes[ymk]) db.mes[ymk] = [];
+  db.mes[ymk].push(
+    { id: uid(), name: 'Revisar filtros del aire acondicionado', cat: '🔧 Mantenimiento', day: 5, done: false },
+    { id: uid(), name: 'Limpieza profunda nevera', cat: '🧹 Limpieza', day: 15, done: false },
+    { id: uid(), name: 'Compra mensual grande', cat: '🛒 Compras', day: 1, done: true },
+    { id: uid(), name: 'Abonar plantas del balcón', cat: '🌿 Plantas', day: 20, done: false },
+  );
+
+  save(db);
+}
+
+/* ─────────────────────────────────────────
+   ANILLO DE PROGRESO
+───────────────────────────────────────── */
+function updateRing() {
+  // Recoger todas las tareas de todas las vistas visibles
+  const activeTab = document.querySelector('.tab-btn.active')?.textContent || '';
+  let total = 0, done = 0, label = 'hoy';
+
+  if (activeTab.includes('Día')) {
+    const tasks = db.dia[selectedDay] || [];
+    total = tasks.length;
+    done  = tasks.filter(t => t.done).length;
+    // label = nombre del día
+    const d = new Date(selectedDay.replace(/-/g, '/'));
+    label = DIAS_L[d.getDay()].toLowerCase();
+  } else if (activeTab.includes('Semana')) {
+    const ref = new Date(TODAY.getFullYear(), TODAY.getMonth() + semMonthOff, 1);
+    const ymk = ymKey(ref);
+    for (let w = 0; w < 4; w++) {
+      const tasks = db.semana[`${ymk}-W${w}`] || [];
+      total += tasks.length;
+      done  += tasks.filter(t => t.done).length;
+    }
+    label = MESES[ref.getMonth()].slice(0,3).toLowerCase();
+  } else if (activeTab.includes('Mes')) {
+    const ref = new Date(TODAY.getFullYear(), TODAY.getMonth() + mesMonthOff, 1);
+    const tasks = db.mes[ymKey(ref)] || [];
+    total = tasks.length;
+    done  = tasks.filter(t => t.done).length;
+    label = MESES[ref.getMonth()].slice(0,3).toLowerCase();
+  }
+
+  const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+  const R = 21;
+  const C = 2 * Math.PI * R; // ~131.95
+  const offset = C - (pct / 100) * C;
+
+  const fill = document.getElementById('ring-fill');
+  const text = document.getElementById('ring-text');
+  const lbl  = document.getElementById('ring-label');
+
+  if (fill) {
+    fill.style.strokeDashoffset = offset;
+    fill.className = 'ring-fill ' + (pct < 34 ? 'low' : pct < 67 ? 'mid' : 'high');
+  }
+  if (text) text.textContent = pct + '%';
+  if (lbl)  lbl.textContent  = label;
+}
+
+/* ─────────────────────────────────────────
+   INIT
+───────────────────────────────────────── */
+seedDemo();
+updateHeaderDate();
+renderDia();
+</script>
+</body>
+</html>
